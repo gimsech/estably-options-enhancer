@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "Estably Options Enhancer",
+  "version": "1.0.0",
+  "description": "Adds option analytics to the Estably / IBKR Client Portal positions table.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.clientam.com/*",
+    "https://query1.finance.yahoo.com/*",
+    "https://query2.finance.yahoo.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.clientam.com/portal/*"
+      ],
+      "js": [
+        "shared/parser.js",
+        "shared/calculations.js",
+        "shared/formatters.js",
+        "content/content-script.js"
+      ],
+      "css": [
+        "content/content-style.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
