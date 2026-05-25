@@ -25,6 +25,18 @@ The project is not affiliated with, endorsed by or sponsored by Estably, Interac
 
 ## Install Locally in Chrome, Edge, Brave or Opera
 
+### From a GitHub Release
+
+1. Download `estably-options-enhancer-v1.0.0.zip` from the latest GitHub release.
+2. Unzip the file.
+3. Open `chrome://extensions`.
+4. Enable developer mode.
+5. Choose "Load unpacked".
+6. Select the unzipped extension folder.
+7. Open the Estably / IBKR Client Portal positions page.
+
+### From Source
+
 1. Open `chrome://extensions`.
 2. Enable developer mode.
 3. Choose "Load unpacked".
@@ -61,6 +73,15 @@ The extension detects the option type from the instrument name and long/short di
 ## Privacy
 
 The extension has no backend. It reads visible table data locally in the browser and sends only ticker symbols, such as `XYZ` or `ABC`, to Yahoo Finance for price lookup. It does not store account numbers, orders, login data, portfolio history or personal data.
+
+## Known Limitations
+
+- Firefox is currently unsupported.
+- Yahoo Finance data may be delayed, unavailable, rate-limited or incorrect.
+- Rolled options require manual break-even overrides.
+- Broker margin, tax treatment, assignment probability and multi-leg strategy risk are not calculated.
+- The extension depends on the current Estably / IBKR Client Portal DOM structure, which can change without notice.
+- Chrome Web Store publication has not been completed; local unpacked installation is the supported installation path for now.
 
 ## Notes
 
