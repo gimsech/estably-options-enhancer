@@ -19,7 +19,22 @@
   let pendingEnhancement = false;
   let observedTable = null;
   let tableObserver = null;
+  let documentObserver = null;
   let breakEvenOverrides = {};
+  let extensionContextInvalidated = false;
+
+  function isExtensionContextError(error) {
+    const message = String(error?.message || error || "").toLowerCase();
+    return message.includes("extension context invalidated") || message.includes("context invalidated");
+  }
+
+  function disableEnhancerRuntime() {
+    extensionContextInvalidated = true;
+    window.clearTimeout(debounceTimer);
+    debounceTimer = null;
+    tableObserver?.disconnect();
+    documentObserver?.disconnect();
+  }
 
   function findPositionsTable() {
     return (
@@ -96,7 +111,7 @@
   }
 
   function getStorageArea() {
-    return chrome?.storage?.local || null;
+    return globalThis.chrome?.storage?.local || null;
   }
 
   function loadBreakEvenOverrides() {
@@ -107,14 +122,25 @@
     }
 
     return new Promise((resolve) => {
-      storage.get(BREAK_EVEN_OVERRIDES_KEY, (result) => {
-        if (chrome.runtime.lastError) {
-          resolve({});
-          return;
-        }
+      try {
+        storage.get(BREAK_EVEN_OVERRIDES_KEY, (result) => {
+          const runtimeError = globalThis.chrome?.runtime?.lastError;
+          if (runtimeError) {
+            if (isExtensionContextError(runtimeError)) {
+              disableEnhancerRuntime();
+            }
+            resolve({});
+            return;
+          }
 
-        resolve(result?.[BREAK_EVEN_OVERRIDES_KEY] || {});
-      });
+          resolve(result?.[BREAK_EVEN_OVERRIDES_KEY] || {});
+        });
+      } catch (error) {
+        if (isExtensionContextError(error)) {
+          disableEnhancerRuntime();
+        }
+        resolve({});
+      }
     });
   }
 
@@ -126,7 +152,20 @@
     }
 
     return new Promise((resolve) => {
-      storage.set({ [BREAK_EVEN_OVERRIDES_KEY]: overrides }, resolve);
+      try {
+        storage.set({ [BREAK_EVEN_OVERRIDES_KEY]: overrides }, () => {
+          const runtimeError = globalThis.chrome?.runtime?.lastError;
+          if (runtimeError && isExtensionContextError(runtimeError)) {
+            disableEnhancerRuntime();
+          }
+          resolve();
+        });
+      } catch (error) {
+        if (isExtensionContextError(error)) {
+          disableEnhancerRuntime();
+        }
+        resolve();
+      }
     });
   }
 
@@ -323,13 +362,31 @@
 
   function getStockPrice(ticker) {
     return new Promise((resolve) => {
-      chrome.runtime.sendMessage({ action: "getPrice", ticker }, (response) => {
-        if (chrome.runtime.lastError) {
-          resolve({ ticker, error: chrome.runtime.lastError.message });
+      try {
+        const sendMessage = globalThis.chrome?.runtime?.sendMessage;
+
+        if (!sendMessage) {
+          resolve({ ticker, error: "EXTENSION_RUNTIME_UNAVAILABLE" });
           return;
         }
-        resolve(response || { ticker, error: "NO_RESPONSE" });
-      });
+
+        sendMessage({ action: "getPrice", ticker }, (response) => {
+          const runtimeError = globalThis.chrome?.runtime?.lastError;
+          if (runtimeError) {
+            if (isExtensionContextError(runtimeError)) {
+              disableEnhancerRuntime();
+            }
+            resolve({ ticker, error: runtimeError.message });
+            return;
+          }
+          resolve(response || { ticker, error: "NO_RESPONSE" });
+        });
+      } catch (error) {
+        if (isExtensionContextError(error)) {
+          disableEnhancerRuntime();
+        }
+        resolve({ ticker, error: error?.message || "PRICE_REQUEST_FAILED" });
+      }
     });
   }
 
@@ -495,7 +552,7 @@
   }
 
   async function enhancePositionsTable() {
-    if (isEnhancing) {
+    if (extensionContextInvalidated || isEnhancing) {
       return;
     }
 
@@ -680,6 +737,10 @@
   }
 
   function scheduleEnhancement() {
+    if (extensionContextInvalidated) {
+      return;
+    }
+
     if (isEnhancing) {
       pendingEnhancement = true;
       return;
@@ -693,6 +754,10 @@
     debounceTimer = window.setTimeout(() => {
       debounceTimer = null;
       enhancePositionsTable().catch((error) => {
+        if (isExtensionContextError(error)) {
+          disableEnhancerRuntime();
+          return;
+        }
         console.warn("[Estably Options Enhancer] Enhancement failed", error);
       });
     }, DEBOUNCE_MS);
@@ -753,7 +818,11 @@
     });
   }
 
-  const documentObserver = new MutationObserver((mutations) => {
+  documentObserver = new MutationObserver((mutations) => {
+    if (extensionContextInvalidated) {
+      return;
+    }
+
     const table = findPositionsTable();
 
     if (table && table !== observedTable) {

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Estably Options Enhancer",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Adds option analytics to the Estably / IBKR Client Portal positions table.",
   "permissions": [
     "storage"
