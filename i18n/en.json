@@ -1,5 +1,6 @@
 {
   "underlyingPrice": "Underlying Price",
+  "daysToExpiry": "Days to Expiry",
   "breakEven": "Break-even",
   "buffer": "Buffer",
   "assignmentExposure": "Assignment Value",

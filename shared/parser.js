@@ -1,4 +1,19 @@
 (function attachParser(global) {
+  const optionMonths = {
+    jan: 1,
+    feb: 2,
+    mar: 3,
+    apr: 4,
+    may: 5,
+    jun: 6,
+    jul: 7,
+    aug: 8,
+    sep: 9,
+    oct: 10,
+    nov: 11,
+    dec: 12
+  };
+
   function parseInstrumentName(name) {
     const clean = String(name || "").replace(/\s+/g, " ").trim();
 
@@ -19,13 +34,18 @@
     }
 
     const [, ticker, month, day, year, strikeRaw, type] = optionMatch;
+    const expiryMonth = optionMonths[month.toLowerCase()] || null;
+    const expiryDay = Number(day);
+    const expiryYear = Number(`20${year}`);
 
     return {
       isOption: true,
       isStock: false,
       ticker: ticker.toUpperCase(),
       expiryRaw: `${month}${day}'${year}`,
-      expiryYear: Number(`20${year}`),
+      expiryYear,
+      expiryMonth,
+      expiryDay,
       strike: Number(strikeRaw.replace(",", ".")),
       type: type.toLowerCase() === "put" ? "Put" : "Call"
     };

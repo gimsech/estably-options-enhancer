@@ -13,7 +13,7 @@ The project is not affiliated with, endorsed by or sponsored by Estably, Interac
 ## Features
 
 - Detects the Estably positions table on `https://www.clientam.com/portal/*`
-- Adds columns for underlying price, break-even, buffer and assignment exposure
+- Adds columns for underlying price, days to expiry, break-even, buffer and risk / exposure
 - Parses put and call instruments such as `XYZ Jun18'26 21 Put`
 - Distinguishes long and short options from the position quantity
 - Leaves stock positions visible and only adds the current underlying price
@@ -27,7 +27,7 @@ The project is not affiliated with, endorsed by or sponsored by Estably, Interac
 
 ### From a GitHub Release
 
-1. Download `estably-options-enhancer-v1.0.0.zip` from the latest GitHub release.
+1. Download the latest `estably-options-enhancer-v*.zip` file from the latest GitHub release.
 2. Unzip the file.
 3. Open `chrome://extensions`.
 4. Enable developer mode.
@@ -52,8 +52,9 @@ Firefox is not officially supported yet and needs a separate compatibility pass.
 1. Install the extension as an unpacked extension.
 2. Open `https://www.clientam.com/portal/*`.
 3. Go to Dashboard -> Positionen / Positions.
-4. The extension adds four columns after the average-price column:
+4. The extension adds five columns after the average-price column:
    - Underlying price
+   - Days to expiry
    - Break-even
    - Buffer
    - Risk / Exposure

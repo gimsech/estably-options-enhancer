@@ -7,6 +7,7 @@
   const labelSets = {
     de: {
       underlyingPrice: "Aktienkurs",
+      daysToExpiry: "Tage bis Ablauf",
       breakEven: "Break-even",
       buffer: "Abstand",
       assignmentExposure: "Andienungswert",
@@ -33,6 +34,7 @@
     },
     en: {
       underlyingPrice: "Underlying Price",
+      daysToExpiry: "Days to Expiry",
       breakEven: "Break-even",
       buffer: "Buffer",
       assignmentExposure: "Assignment Value",

@@ -93,13 +93,32 @@
     return null;
   }
 
+  function calculateDaysToExpiry(position) {
+    if (
+      typeof position.expiryYear !== "number" ||
+      typeof position.expiryMonth !== "number" ||
+      typeof position.expiryDay !== "number"
+    ) {
+      return null;
+    }
+
+    const today = new Date();
+    const todayLocalMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const expiryLocalMidnight = new Date(position.expiryYear, position.expiryMonth - 1, position.expiryDay);
+    const days = Math.ceil((expiryLocalMidnight.getTime() - todayLocalMidnight.getTime()) / 86_400_000);
+
+    return Number.isFinite(days) ? days : null;
+  }
+
   function buildAnalytics(position, labels) {
     const underlyingPrice = position.underlyingPrice;
     const strategy = getOptionStrategy(position);
+    const daysToExpiry = calculateDaysToExpiry(position);
 
     if (!strategy) {
       return {
         underlyingPrice,
+        daysToExpiry: null,
         breakEven: null,
         bufferPercent: null,
         assignmentExposure: null,
@@ -121,6 +140,7 @@
 
     return {
       underlyingPrice,
+      daysToExpiry,
       breakEven,
       bufferPercent,
       assignmentExposure,
@@ -166,6 +186,7 @@
 
   global.EstablyOptionsCalculations = {
     buildAnalytics,
+    calculateDaysToExpiry,
     getOptionStrategy,
     getRiskStatus,
     summarizeAnalytics

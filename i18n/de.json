@@ -1,5 +1,6 @@
 {
   "underlyingPrice": "Aktienkurs",
+  "daysToExpiry": "Tage bis Ablauf",
   "breakEven": "Break-even",
   "buffer": "Abstand",
   "assignmentExposure": "Andienungswert",

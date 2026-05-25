@@ -2,6 +2,7 @@
   const ENHANCED_TABLE_ATTR = "data-estably-options-enhanced";
   const ENHANCER_CELL_ATTR = "data-estably-options-cell";
   const ENHANCER_TAB_ATTR = "data-estably-options-tab";
+  const ENHANCER_COLUMN_COUNT = 5;
   const DEBOUNCE_MS = 350;
   const BREAK_EVEN_OVERRIDES_KEY = "establyOptionsBreakEvenOverrides";
 
@@ -141,7 +142,7 @@
 
     const existingColumns = Array.from(colgroup.querySelectorAll(`col[${ENHANCER_CELL_ATTR}]`));
     const insertAt = analyticsInsertIndex(columnMap);
-    const widths = ["120px", "120px", "180px", "190px"];
+    const widths = ["120px", "125px", "120px", "180px", "190px"];
 
     widths.forEach((width, offset) => {
       let col = existingColumns[offset];
@@ -215,6 +216,20 @@
     }
   }
 
+  function setIntegerCellState(cell, value, className, title = "", fallback = "—") {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      setCellState(cell, fallback, className, title);
+      return;
+    }
+
+    setCellState(
+      cell,
+      formatNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 0 }),
+      className,
+      title
+    );
+  }
+
   function parsePromptNumber(value) {
     const parsed = parseLocalizedNumber(value);
     return typeof parsed === "number" && Number.isFinite(parsed) ? parsed : null;
@@ -261,6 +276,7 @@
     ensureEnhancerColumns(table, columnMap);
     const headerLabels = [
       labels.underlyingPrice,
+      labels.daysToExpiry,
       labels.breakEven,
       labels.buffer,
       labels.exposureRisk
@@ -284,7 +300,7 @@
     removeExtraEnhancerCells(headerRow, headerLabels.length);
     table.setAttribute(ENHANCED_TABLE_ATTR, "true");
     const originalColumnCount = headerRow.querySelectorAll(`th:not([${ENHANCER_CELL_ATTR}])`).length;
-    table.setAttribute("aria-colcount", String(originalColumnCount + 4));
+    table.setAttribute("aria-colcount", String(originalColumnCount + ENHANCER_COLUMN_COUNT));
   }
 
   function extractPositionFromRow(row, columnMap) {
@@ -322,21 +338,21 @@
     const cells = [];
     const existingEnhancerCells = enhancerCells(row);
 
-    for (let index = 0; index < 4; index += 1) {
+    for (let index = 0; index < ENHANCER_COLUMN_COUNT; index += 1) {
       let cell = existingEnhancerCells[index];
 
       if (!cell) {
         cell = createCell("td");
       }
 
-      if (!isEnhancerCellInBlockPosition(row, insertAt, index, 4, cell)) {
+      if (!isEnhancerCellInBlockPosition(row, insertAt, index, ENHANCER_COLUMN_COUNT, cell)) {
         insertCellBeforeNative(row, insertAt, cell);
       }
 
       cells.push(cell);
     }
 
-    removeExtraEnhancerCells(row, 4);
+    removeExtraEnhancerCells(row, ENHANCER_COLUMN_COUNT);
     return cells;
   }
 
@@ -407,20 +423,27 @@
     } else {
       setCurrencyCellState(cells[0], analytics.underlyingPrice, priceClass, strategyLabel);
     }
-    setCurrencyCellState(
+    setIntegerCellState(
       cells[1],
+      analytics.daysToExpiry,
+      "eoe-cell eoe-number eoe-days-to-expiry",
+      "",
+      "—"
+    );
+    setCurrencyCellState(
+      cells[2],
       analytics.breakEven,
       analytics.isAdjustedBreakEven ? "eoe-cell eoe-number eoe-adjusted-break-even" : "eoe-cell eoe-number",
       "",
       "—"
     );
-    attachBreakEvenOverrideHandler(cells[1], parsed, analytics);
-    setCellState(cells[2], bufferText, bufferClass);
+    attachBreakEvenOverrideHandler(cells[2], parsed, analytics);
+    setCellState(cells[3], bufferText, bufferClass);
     const exposureTitle = [strategyLabel, analytics.exposureLabelKey ? labels[analytics.exposureLabelKey] : ""]
       .filter(Boolean)
       .join(" · ");
     setCurrencyCellState(
-      cells[3],
+      cells[4],
       analytics.assignmentExposure,
       "eoe-cell eoe-number",
       exposureTitle,
@@ -448,7 +471,7 @@
     const insertAt = analyticsInsertIndex(columnMap);
 
     return (
-      enhancerCells(headerRow || document.createElement("tr")).length === 4 &&
+      enhancerCells(headerRow || document.createElement("tr")).length === ENHANCER_COLUMN_COUNT &&
       [headerRow, ...rows].every((row) => {
         if (!row) {
           return false;
@@ -456,8 +479,8 @@
 
         const cells = enhancerCells(row);
         return (
-          cells.length === 4 &&
-          cells.every((cell, offset) => isEnhancerCellInBlockPosition(row, insertAt, offset, 4, cell))
+          cells.length === ENHANCER_COLUMN_COUNT &&
+          cells.every((cell, offset) => isEnhancerCellInBlockPosition(row, insertAt, offset, ENHANCER_COLUMN_COUNT, cell))
         );
       })
     );
